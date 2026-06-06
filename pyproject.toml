@@ -1,0 +1,36 @@
+[project]
+name = "Swift_Agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "dotenv>=0.9.9",
+    "langchain>=1.3.1",
+    "langchain-groq>=1.1.2",
+    "langchain-mcp-adapters>=0.2.2",
+    "langchain-openai>=1.2.1",
+    "langgraph>=1.2.0",
+    "pandas>=3.0.3",
+    "plotly>=6.7.0",
+    "psycopg2-binary>=2.9.12",
+    "pydantic>=2.13.4",
+    "sqlalchemy>=2.0.49",
+    "nest_asyncio>=1.6.0",
+    "langchain-ollama>=1.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "black>=26.5.1",
+    "isort>=8.0.1",
+    "langgraph-api>=0.8.7",
+    "langgraph-cli>=0.4.26",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["swift"]
