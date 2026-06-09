@@ -7,10 +7,10 @@ import type {
   InterruptDecision,
   ThreadMeta,
 } from "@/lib/types";
-import { streamRun } from "@/lib/langgraph";
+import { streamRun, fetchThreadHistory } from "@/lib/langgraph";
 import Sidebar from "./Sidebar";
 import MessageList from "./MessageList";
-import ChatInput from "./ChatInput";
+import { MorphPanel } from "./ui/ai-input";
 
 const THREADS_KEY = "swift_threads";
 
@@ -41,6 +41,7 @@ export default function ChatShell() {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [threadItems, setThreadItems] = useState<Record<string, ChatItem[]>>({});
   const [isStreaming, setIsStreaming] = useState(false);
+  const [loadingThread, setLoadingThread] = useState(false);
 
   useEffect(() => {
     setThreads(loadThreads());
@@ -175,9 +176,36 @@ export default function ChatShell() {
 
   const handleNewChat = useCallback(() => setActiveThreadId(null), []);
   const handleSelectThread = useCallback(
-    (tid: string) => setActiveThreadId(tid),
-    []
+    async (tid: string) => {
+      setActiveThreadId(tid);
+      // If we already have messages cached, no need to fetch
+      if (threadItems[tid]?.length) return;
+      setLoadingThread(true);
+      try {
+        const history = await fetchThreadHistory(tid);
+        if (history.length > 0) {
+          setThreadItems((prev) => ({ ...prev, [tid]: history }));
+        }
+      } finally {
+        setLoadingThread(false);
+      }
+    },
+    [threadItems]
   );
+
+  const handleDeleteThread = useCallback((tid: string) => {
+    setThreads((prev) => {
+      const next = prev.filter((t) => t.threadId !== tid);
+      saveThreads(next);
+      return next;
+    });
+    setThreadItems((prev) => {
+      const copy = { ...prev };
+      delete copy[tid];
+      return copy;
+    });
+    setActiveThreadId((prev) => (prev === tid ? null : prev));
+  }, []);
 
   return (
     <div
@@ -189,6 +217,7 @@ export default function ChatShell() {
         activeThreadId={activeThreadId}
         onSelect={handleSelectThread}
         onNewChat={handleNewChat}
+        onDelete={handleDeleteThread}
       />
 
       {/* ── Chat area ───────────────────────────────────────── */}
@@ -218,7 +247,21 @@ export default function ChatShell() {
         </header>
 
         {/* Messages — takes remaining space */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col relative">
+          {loadingThread && (
+            <div
+              className="absolute inset-0 flex items-center justify-center z-10"
+              style={{ background: "rgba(6,11,20,0.6)", backdropFilter: "blur(4px)" }}
+            >
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+                  style={{ borderColor: "#6366f1", borderTopColor: "transparent" }}
+                />
+                <p className="text-sm" style={{ color: "#64748b" }}>Loading conversation…</p>
+              </div>
+            </div>
+          )}
           <MessageList
             items={items}
             isStreaming={isStreaming}
@@ -231,8 +274,8 @@ export default function ChatShell() {
           className="shrink-0 px-4 pb-4 pt-3"
           style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
         >
-          <div className="max-w-3xl mx-auto">
-            <ChatInput
+          <div className="max-w-3xl mx-auto flex justify-center">
+            <MorphPanel
               onSend={handleSend}
               disabled={isStreaming}
               placeholder={

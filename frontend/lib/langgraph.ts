@@ -31,6 +31,74 @@ function parseContent(content: string | ContentBlock[] | undefined): string {
     .join("");
 }
 
+// ── Fetch thread history from LangGraph state ───────────────────
+
+export async function fetchThreadHistory(threadId: string): Promise<ChatItem[]> {
+  const res = await fetch(`/api/threads/${threadId}/state`);
+  if (!res.ok) return [];
+
+  let state: Record<string, unknown>;
+  try {
+    state = await res.json();
+  } catch {
+    return [];
+  }
+
+  const messages = state["values"] as Record<string, unknown> | undefined;
+  const rawMessages = (messages?.["messages"] ?? state["messages"]) as RawMessage[] | undefined;
+  if (!Array.isArray(rawMessages)) return [];
+
+  const items: ChatItem[] = [];
+
+  for (const msg of rawMessages) {
+    const role = msg.type ?? msg.role ?? "";
+    const content = parseContent(msg.content);
+
+    if (role === "human") {
+      items.push({
+        kind: "human",
+        id: msg.id ?? crypto.randomUUID(),
+        text: content,
+      });
+    } else if (role === "ai") {
+      // Push any tool calls first
+      for (const tc of (msg.tool_calls ?? []) as ToolCall[]) {
+        if (tc.id && tc.name) {
+          items.push({
+            kind: "tool_call",
+            id: tc.id,
+            name: tc.name,
+            args: tc.args ?? {},
+          });
+        }
+      }
+      // Only push AI text bubble if there's actual text
+      if (content) {
+        items.push({
+          kind: "ai",
+          id: msg.id ?? crypto.randomUUID(),
+          text: content,
+          streaming: false,
+        });
+      }
+    } else if (role === "tool") {
+      const raw =
+        typeof msg.content === "string"
+          ? msg.content
+          : JSON.stringify(msg.content);
+      items.push({
+        kind: "tool_result",
+        id: msg.id ?? crypto.randomUUID(),
+        name: msg.name ?? "tool",
+        content: raw,
+        isError: msg.status === "error",
+      });
+    }
+  }
+
+  return items;
+}
+
 // ── The main async generator ────────────────────────────────────
 
 export async function* streamRun(

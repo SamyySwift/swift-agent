@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { ThreadMeta } from "@/lib/types";
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
   activeThreadId: string | null;
   onSelect: (id: string) => void;
   onNewChat: () => void;
+  onDelete: (id: string) => void;
 }
 
 function timeAgo(ts: number): string {
@@ -24,7 +26,27 @@ export default function Sidebar({
   activeThreadId,
   onSelect,
   onNewChat,
+  onDelete,
 }: Props) {
+  // Track which thread is showing the delete confirmation
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+
+  function handleDeleteClick(e: React.MouseEvent, tid: string) {
+    e.stopPropagation();
+    if (pendingDelete === tid) {
+      // Second click — confirmed
+      onDelete(tid);
+      setPendingDelete(null);
+    } else {
+      setPendingDelete(tid);
+    }
+  }
+
+  function handleRowClick(tid: string) {
+    setPendingDelete(null);
+    onSelect(tid);
+  }
+
   return (
     <aside
       className="hidden md:flex flex-col w-64 shrink-0 h-full overflow-hidden"
@@ -86,11 +108,12 @@ export default function Sidebar({
           <div className="flex flex-col gap-0.5">
             {threads.map((t) => {
               const isActive = t.threadId === activeThreadId;
+              const isConfirming = pendingDelete === t.threadId;
+
               return (
-                <button
+                <div
                   key={t.threadId}
-                  onClick={() => onSelect(t.threadId)}
-                  className="w-full text-left px-3 py-2.5 rounded-xl transition-all duration-150"
+                  className="group relative flex items-center rounded-xl transition-all duration-150"
                   style={{
                     background: isActive ? "rgba(99,102,241,0.12)" : "transparent",
                     border: isActive
@@ -98,16 +121,50 @@ export default function Sidebar({
                       : "1px solid transparent",
                   }}
                 >
-                  <p
-                    className="text-sm truncate font-medium"
-                    style={{ color: isActive ? "#e2e8f0" : "#94a3b8" }}
+                  {/* Main clickable area */}
+                  <button
+                    onClick={() => handleRowClick(t.threadId)}
+                    className="flex-1 min-w-0 text-left px-3 py-2.5 pr-8"
                   >
-                    {t.title}
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: "#475569" }}>
-                    {timeAgo(t.createdAt)}
-                  </p>
-                </button>
+                    <p
+                      className="text-sm truncate font-medium"
+                      style={{ color: isActive ? "#e2e8f0" : "#94a3b8" }}
+                    >
+                      {t.title}
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: "#475569" }}>
+                      {timeAgo(t.createdAt)}
+                    </p>
+                  </button>
+
+                  {/* Delete button — visible on hover or while confirming */}
+                  <button
+                    onClick={(e) => handleDeleteClick(e, t.threadId)}
+                    onBlur={() => {
+                      // Cancel confirm if focus leaves without a second click
+                      if (pendingDelete === t.threadId) setPendingDelete(null);
+                    }}
+                    aria-label={isConfirming ? "Confirm delete" : "Delete thread"}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-150"
+                    style={{
+                      opacity: isConfirming ? 1 : undefined,
+                      background: isConfirming ? "rgba(239,68,68,0.2)" : "transparent",
+                      color: isConfirming ? "#ef4444" : "#64748b",
+                    }}
+                  >
+                    {isConfirming ? (
+                      // Confirm icon (checkmark)
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    ) : (
+                      // Trash icon
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M1.5 3h9M4.5 3V2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1M5 5.5v3M7 5.5v3M2.5 3l.5 7a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5l.5-7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               );
             })}
           </div>
