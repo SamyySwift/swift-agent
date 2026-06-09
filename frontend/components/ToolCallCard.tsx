@@ -38,7 +38,7 @@ export default function ToolCallCard({ name, args }: Props) {
 
       {open && hasArgs && (
         <pre
-          className="px-3 pb-3 overflow-x-auto"
+          className="px-3 py-3 overflow-x-auto"
           style={{ color: "#94a3b8", borderTop: "1px solid rgba(245,158,11,0.12)" }}
         >
           {JSON.stringify(args, null, 2)}

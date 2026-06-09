@@ -2,6 +2,7 @@
 
 import type { InterruptDecision, InterruptPayload } from "@/lib/types";
 import { useState, useRef, useEffect } from "react";
+import { Check, Edit3, MessageSquare, X, ShieldAlert } from "lucide-react";
 
 interface Props {
   payload: InterruptPayload;
@@ -46,11 +47,11 @@ export default function InterruptCard({ payload, onDecide, disabled }: Props) {
   const args = payload.args ?? payload.tool_call?.args ?? {};
   const argsStr = JSON.stringify(args, null, 2);
 
-  const tabs: { id: Tab; label: string; icon: string; color: string }[] = [
-    { id: "approve", label: "Approve", icon: "✅", color: "var(--green)" },
-    { id: "edit", label: "Edit Args", icon: "✏️", color: "var(--amber)" },
-    { id: "feedback", label: "Feedback", icon: "💬", color: "var(--accent-from)" },
-    { id: "reject", label: "Reject", icon: "❌", color: "var(--red)" },
+  const tabs: { id: Tab; label: string; icon: React.ElementType; color: string }[] = [
+    { id: "approve", label: "Approve", icon: Check, color: "var(--green)" },
+    { id: "edit", label: "Edit Args", icon: Edit3, color: "var(--amber)" },
+    { id: "feedback", label: "Feedback", icon: MessageSquare, color: "var(--accent-from)" },
+    { id: "reject", label: "Reject", icon: X, color: "var(--red)" },
   ];
 
   const submitColors: Record<Tab, string> = {
@@ -60,11 +61,11 @@ export default function InterruptCard({ payload, onDecide, disabled }: Props) {
     reject: "bg-red-700 hover:bg-red-600",
   };
 
-  const submitLabels: Record<Tab, string> = {
-    approve: "✅ Approve & Run",
-    edit: "✏️ Update & Run",
-    feedback: "💬 Send Feedback",
-    reject: "❌ Reject Tool Call",
+  const submitLabels: Record<Tab, { label: string; icon: React.ElementType }> = {
+    approve: { label: "Approve & Run", icon: Check },
+    edit: { label: "Update & Run", icon: Edit3 },
+    feedback: { label: "Send Feedback", icon: MessageSquare },
+    reject: { label: "Reject Tool Call", icon: X },
   };
 
   return (
@@ -82,7 +83,7 @@ export default function InterruptCard({ payload, onDecide, disabled }: Props) {
         className="flex items-start gap-3 px-5 py-4"
         style={{ borderBottom: "1px solid rgba(239,68,68,0.15)" }}
       >
-        <span className="text-xl mt-0.5">🛡️</span>
+        <ShieldAlert className="w-5 h-5 mt-0.5 text-red-500" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm" style={{ color: "var(--red)" }}>
             Your Approval is Required
@@ -137,7 +138,7 @@ export default function InterruptCard({ payload, onDecide, disabled }: Props) {
               color: tab === t.id ? t.color : "var(--text-muted)",
             }}
           >
-            <span>{t.icon}</span>
+            <t.icon className="w-3.5 h-3.5" />
             {t.label}
           </button>
         ))}
@@ -217,7 +218,13 @@ export default function InterruptCard({ payload, onDecide, disabled }: Props) {
           disabled={disabled || (tab === "feedback" && !feedbackMsg.trim())}
           className={`px-5 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${submitColors[tab]}`}
         >
-          {submitLabels[tab]}
+          <div className="flex items-center gap-2">
+            {(() => {
+              const Icon = submitLabels[tab].icon;
+              return <Icon className="w-4 h-4" />;
+            })()}
+            {submitLabels[tab].label}
+          </div>
         </button>
       </div>
     </div>

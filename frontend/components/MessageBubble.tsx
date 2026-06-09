@@ -1,6 +1,7 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { AIItem, HumanItem } from "@/lib/types";
 
 // ── Human bubble ─────────────────────────────────────────────────
@@ -38,7 +39,7 @@ export function AIBubble({ item }: { item: AIItem }) {
 
       {/* Bubble */}
       <div
-        className="flex-1 min-w-0 px-4 py-3 rounded-2xl rounded-tl-sm text-sm"
+        className="min-w-0 max-w-[85%] px-4 py-3 rounded-2xl rounded-tl-sm text-sm"
         style={{
           background: "var(--glass)",
           border: "1px solid var(--border)",
@@ -47,7 +48,7 @@ export function AIBubble({ item }: { item: AIItem }) {
       >
         {item.text ? (
           <div className={`prose-chat${item.streaming ? " cursor-blink" : ""}`}>
-            <ReactMarkdown>{item.text}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{item.text}</ReactMarkdown>
           </div>
         ) : (
           // Empty streaming — show animated dots

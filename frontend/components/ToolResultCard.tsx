@@ -59,7 +59,7 @@ export default function ToolResultCard({ name, content, isError }: Props) {
 
       {open && (
         <pre
-          className="px-3 pb-3 overflow-x-auto max-h-64"
+          className="px-3 py-3 overflow-x-auto max-h-64"
           style={{
             color: isError ? "#fca5a5" : "#86efac",
             borderTop: `1px solid ${border}`,

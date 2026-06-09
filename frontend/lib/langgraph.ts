@@ -123,7 +123,7 @@ export async function* streamRun(
               accumulatedText = content;
               results.push({
                 kind: "ai",
-                id: currentAiId,
+                id: currentAiId!,
                 text: accumulatedText,
                 streaming: true,
               });
@@ -224,7 +224,7 @@ export async function* streamRun(
         const message =
           (errData.message as string) ?? JSON.stringify(parsed);
         return [{
-          kind: "error",
+          kind: "error" as const,
           id: crypto.randomUUID(),
           message,
         }];

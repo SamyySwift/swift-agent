@@ -67,7 +67,7 @@ function EmptyState() {
         {suggestions.map((s) => (
           <div
             key={s}
-            className="px-4 py-3 rounded-xl text-sm cursor-default"
+            className="px-4 py-3 rounded-3xl text-sm cursor-default"
             style={{
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.1)",
@@ -105,10 +105,9 @@ export default function MessageList({ items, isStreaming, onInterruptDecide }: P
               return <AIBubble key={item.id} item={item as AIItem} />;
             case "tool_call":
               return (
-                <div className="flex justify-center w-full">
+                <div key={item.id} className="flex justify-center w-full">
                   <div className="w-full max-w-2xl">
                     <ToolCallCard
-                      key={item.id}
                       id={item.id}
                       name={(item as ToolCallItem).name}
                       args={(item as ToolCallItem).args}
@@ -118,10 +117,9 @@ export default function MessageList({ items, isStreaming, onInterruptDecide }: P
               );
             case "tool_result":
               return (
-                <div className="flex justify-center w-full">
+                <div key={item.id} className="flex justify-center w-full">
                   <div className="w-full max-w-2xl">
                     <ToolResultCard
-                      key={item.id}
                       id={item.id}
                       name={(item as ToolResultItem).name}
                       content={(item as ToolResultItem).content}
@@ -132,10 +130,9 @@ export default function MessageList({ items, isStreaming, onInterruptDecide }: P
               );
             case "interrupt":
               return (
-                <div className="flex justify-center w-full">
+                <div key={item.id} className="flex justify-center w-full">
                   <div className="w-full max-w-2xl">
                     <InterruptCard
-                      key={item.id}
                       payload={(item as InterruptItem).payload}
                       onDecide={(decision) => onInterruptDecide(item.id, decision)}
                       disabled={(item as InterruptItem).resolved}
