@@ -1,0 +1,172 @@
+@import "tailwindcss";
+
+/* ── Design Tokens ──────────────────────────────────────────────── */
+:root {
+  --bg-base:       #060b14;
+  --bg-surface:    #0d1625;
+  --bg-surface-2:  #111c2e;
+  --bg-elevated:   #162035;
+
+  --accent-from:   #6366f1;
+  --accent-to:     #8b5cf6;
+  --accent-glow:   rgba(99, 102, 241, 0.25);
+
+  --amber:         #f59e0b;
+  --amber-dim:     rgba(245, 158, 11, 0.12);
+  --red:           #ef4444;
+  --red-dim:       rgba(239, 68, 68, 0.10);
+  --green:         #22c55e;
+  --green-dim:     rgba(34, 197, 94, 0.10);
+
+  --text-primary:  #f1f5f9;
+  --text-secondary:#94a3b8;
+  --text-muted:    #475569;
+
+  --border:        rgba(255,255,255,0.07);
+  --border-hover:  rgba(255,255,255,0.14);
+  --glass:         rgba(255,255,255,0.03);
+  --glass-hover:   rgba(255,255,255,0.055);
+
+  --radius-sm:     6px;
+  --radius:        12px;
+  --radius-lg:     18px;
+  --radius-xl:     24px;
+
+  --shadow-glow:   0 0 40px rgba(99,102,241,0.15);
+  --shadow-card:   0 4px 24px rgba(0,0,0,0.4);
+}
+
+/* ── Reset & Base ───────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #__next { height: 100%; color-scheme: dark; }
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Gradient text utility ──────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glass card ─────────────────────────────────────────────────── */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+.glass:hover { background: var(--glass-hover); border-color: var(--border-hover); }
+
+/* ── Animated background radial ─────────────────────────────────── */
+.bg-radial {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(99,102,241,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(139,92,246,0.05) 0%, transparent 70%),
+    var(--bg-base);
+}
+
+/* ── Typing cursor blink ────────────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.cursor-blink::after {
+  content: '▋';
+  display: inline-block;
+  animation: blink 0.9s ease-in-out infinite;
+  margin-left: 1px;
+  color: var(--accent-from);
+  font-size: 0.9em;
+}
+
+/* ── Fade-in-up for new messages ────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-in { animation: fadeInUp 0.25s ease forwards; }
+
+/* ── Pulse dot for streaming ────────────────────────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50%       { transform: scale(1.4); opacity: 0.5; }
+}
+.pulse-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent-from);
+  animation: pulse-dot 1.2s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* ── Shimmer for loading ────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg,
+    var(--bg-elevated) 25%,
+    var(--bg-surface-2) 50%,
+    var(--bg-elevated) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Code / mono font ───────────────────────────────────────────── */
+code, pre, .mono {
+  font-family: var(--font-mono), 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85em;
+}
+
+/* ── Markdown prose inside AI bubbles ───────────────────────────── */
+.prose-chat p  { margin-bottom: 0.75rem; }
+.prose-chat p:last-child { margin-bottom: 0; }
+.prose-chat ul, .prose-chat ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+.prose-chat li { margin-bottom: 0.25rem; }
+.prose-chat code {
+  background: rgba(99,102,241,0.12);
+  color: #a5b4fc;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-size: 0.83em;
+}
+.prose-chat pre {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+}
+.prose-chat pre code { background: none; padding: 0; color: #e2e8f0; }
+.prose-chat strong { color: var(--text-primary); font-weight: 600; }
+.prose-chat a { color: #a5b4fc; text-decoration: underline; text-underline-offset: 3px; }
+.prose-chat h1,.prose-chat h2,.prose-chat h3 {
+  font-weight: 600; margin: 1rem 0 0.5rem;
+  color: var(--text-primary);
+}
+.prose-chat blockquote {
+  border-left: 3px solid var(--accent-from);
+  padding-left: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0.5rem 0;
+}
+.prose-chat table { border-collapse: collapse; width: 100%; margin-bottom: 0.75rem; }
+.prose-chat th, .prose-chat td { border: 1px solid var(--border); padding: 0.4rem 0.75rem; font-size: 0.9em; }
+.prose-chat th { background: var(--bg-elevated); }
