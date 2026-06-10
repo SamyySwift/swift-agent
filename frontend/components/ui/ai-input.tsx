@@ -261,7 +261,7 @@ function DockBar({ disabled }: { disabled?: boolean }) {
                     disabled={disabled}
                 >
                     <span className="truncate">
-                        {disabled ? "Swift is thinking…" : "Ask AI"}
+                        {disabled ? "Swift is thinking…" : "Ask Swift"}
                     </span>
                 </Button>
             </div>

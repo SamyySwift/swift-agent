@@ -9,10 +9,10 @@ export function HumanBubble({ item }: { item: HumanItem }) {
   return (
     <div className="flex justify-end animate-in">
       <div
-        className="max-w-[78%] px-4 py-3 rounded-2xl rounded-br-sm text-sm leading-relaxed"
+        className="max-w-[78%] px-4 py-3 rounded-2xl rounded-br-sm text-sm leading-relaxed font-medium"
         style={{
           background: "linear-gradient(135deg, var(--accent-from), var(--accent-to))",
-          color: "#fff",
+          color: "#111111",
           boxShadow: "0 2px 16px var(--accent-glow)",
         }}
       >
@@ -34,7 +34,7 @@ export function AIBubble({ item }: { item: AIItem }) {
           boxShadow: "0 0 14px var(--accent-glow)",
         }}
       >
-        ⚡
+        <span style={{ filter: "invert(1)" }}>⚡</span>
       </div>
 
       {/* Bubble */}

@@ -210,7 +210,7 @@ export default function ChatShell() {
   return (
     <div
       className="flex"
-      style={{ height: "100dvh", background: "#060b14" }}
+      style={{ height: "100dvh", background: "#000000" }}
     >
       <Sidebar
         threads={threads}
@@ -225,21 +225,23 @@ export default function ChatShell() {
         {/* Mobile top bar */}
         <header
           className="flex md:hidden items-center gap-3 px-4 py-3 shrink-0"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "#0d1625" }}
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "#070707" }}
         >
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
-            style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+            style={{ background: "linear-gradient(135deg, #ffffff, #888888)" }}
           >
             ⚡
           </div>
           <span
             className="font-bold text-sm"
             style={{
-              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              background: "linear-gradient(135deg, #ffffff, #888888)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
+              fontFamily: "'Space Grotesk', sans-serif",
+              letterSpacing: "-0.01em",
             }}
           >
             Swift Agent
@@ -251,14 +253,14 @@ export default function ChatShell() {
           {loadingThread && (
             <div
               className="absolute inset-0 flex items-center justify-center z-10"
-              style={{ background: "rgba(6,11,20,0.6)", backdropFilter: "blur(4px)" }}
+              style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
             >
               <div className="flex flex-col items-center gap-3">
                 <div
                   className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-                  style={{ borderColor: "#6366f1", borderTopColor: "transparent" }}
+                  style={{ borderColor: "rgba(255,255,255,0.3)", borderTopColor: "transparent" }}
                 />
-                <p className="text-sm" style={{ color: "#64748b" }}>Loading conversation…</p>
+                <p className="text-sm" style={{ color: "#444444" }}>Loading conversation…</p>
               </div>
             </div>
           )}
@@ -266,13 +268,14 @@ export default function ChatShell() {
             items={items}
             isStreaming={isStreaming}
             onInterruptDecide={handleInterruptDecide}
+            onSuggestionClick={handleSend}
           />
         </div>
 
         {/* Input bar */}
         <div
           className="shrink-0 px-4 pb-4 pt-3"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+        // style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
         >
           <div className="max-w-3xl mx-auto flex justify-center">
             <MorphPanel
@@ -284,12 +287,7 @@ export default function ChatShell() {
                   : "Message Swift — ask about your Supabase projects…"
               }
             />
-            <p
-              className="text-center text-xs mt-2"
-              style={{ color: "#334155" }}
-            >
-              Protected tools require your approval before running.
-            </p>
+
           </div>
         </div>
       </div>
