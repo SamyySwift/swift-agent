@@ -217,7 +217,7 @@ export async function* streamRun(
             }
 
             for (const tc of (msg.tool_calls ?? []) as ToolCall[]) {
-              if (tc.id && !seenToolCallIds.has(tc.id) && tc.name) {
+              if (tc.id && tc.name) {
                 seenToolCallIds.add(tc.id);
                 results.push({
                   kind: "tool_call",
