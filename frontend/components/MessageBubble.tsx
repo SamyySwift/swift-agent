@@ -29,13 +29,15 @@ export function AIBubble({ item }: { item: AIItem }) {
     <div className="flex items-start gap-3 animate-in">
       {/* Avatar */}
       <div
-        className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold"
+        className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-black"
         style={{
           background: "linear-gradient(135deg, var(--accent-from), var(--accent-to))",
           boxShadow: "0 0 14px var(--accent-glow)",
         }}
       >
-        <span style={{ filter: "invert(1)" }}>⚡</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" />
+        </svg>
       </div>
 
       {/* Bubble */}

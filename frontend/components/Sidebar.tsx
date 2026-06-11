@@ -6,6 +6,8 @@ import type { ThreadMeta } from "@/lib/types";
 interface Props {
   threads: ThreadMeta[];
   activeThreadId: string | null;
+  isOpen: boolean;
+  onClose: () => void;
   onSelect: (id: string) => void;
   onNewChat: () => void;
   onDelete: (id: string) => void;
@@ -43,6 +45,8 @@ function ThreadIcon({ title }: { title: string }) {
 export default function Sidebar({
   threads,
   activeThreadId,
+  isOpen,
+  onClose,
   onSelect,
   onNewChat,
   onDelete,
@@ -63,16 +67,28 @@ export default function Sidebar({
   function handleRowClick(tid: string) {
     setPendingDelete(null);
     onSelect(tid);
+    onClose(); // Close sidebar on mobile after selecting a chat
   }
 
   return (
-    <aside
-      className="hidden md:flex flex-col w-60 shrink-0 h-full overflow-hidden relative"
-      style={{
-        background: "#070707",
-        borderRight: "1px solid rgba(255,255,255,0.05)",
-      }}
-    >
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity"
+          onClick={onClose}
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col w-64 shrink-0 h-full overflow-hidden transition-transform duration-300 ease-out md:relative md:translate-x-0 md:flex ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        style={{
+          background: "#070707",
+          borderRight: "1px solid rgba(255,255,255,0.05)",
+        }}
+      >
       {/* Subtle top-left radial */}
       <div
         className="pointer-events-none absolute inset-0"
@@ -89,13 +105,14 @@ export default function Sidebar({
       >
         {/* Logo mark */}
         <div
-          className="logo-glow w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+          className="logo-glow w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-black"
           style={{
             background: "linear-gradient(135deg, #ffffff 0%, #888888 100%)",
-            fontSize: "14px",
           }}
         >
-          <span style={{ filter: "invert(1)" }}>⚡</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" />
+          </svg>
         </div>
 
         <div className="min-w-0 flex-1">
@@ -340,5 +357,6 @@ export default function Sidebar({
         </p>
       </div>
     </aside>
+    </>
   );
 }

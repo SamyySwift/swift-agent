@@ -4,12 +4,10 @@ from typing import Annotated, List, Literal, TypedDict
 
 from dotenv import load_dotenv
 from langchain_core.messages import AIMessage, BaseMessage, SystemMessage, ToolMessage
-from langchain_groq import ChatGroq
-from langgraph.checkpoint.memory import MemorySaver
+# from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph, add_messages
 from langgraph.prebuilt import ToolNode
 from langgraph.types import Command, interrupt
-from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from swift.mcp_servers.client import get_all_tools
 from swift.prompts.prompts import swift_system_prompt as SYSTEM_PROMPT
@@ -45,11 +43,11 @@ async def build_graph():
     except Exception as e:
         print(f"Something went wrong while trying to load tools... {e}")
 
-    llm = ChatGroq(
-        # base_url="https://openrouter.ai/api/v1",
-        model="openai/gpt-oss-120b",
+    llm = ChatOpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        model="nex-agi/nex-n2-pro:free",
         temperature=0.2,
-    ).bind_tools(all_tools)
+    ).bind_tools(all_tools, parallel_tool_calls=True)
 
     async def agent_node(state: AgentState) -> AgentState:
         messages_for_llm = []

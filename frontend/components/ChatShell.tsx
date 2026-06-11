@@ -9,7 +9,7 @@ import type {
   ThreadMeta,
 } from "@/lib/types";
 import { streamRun, fetchThreadHistory } from "@/lib/langgraph";
-import { Download } from "lucide-react";
+import { Settings, Download, Menu } from "lucide-react";
 import { usePDF } from "react-to-pdf";
 import Sidebar from "./Sidebar";
 import MessageList from "./MessageList";
@@ -45,6 +45,7 @@ export default function ChatShell() {
   const [threadItems, setThreadItems] = useState<Record<string, ChatItem[]>>({});
   const [isStreaming, setIsStreaming] = useState(false);
   const [loadingThread, setLoadingThread] = useState(false);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   // Always-current ref so closures inside useCallback can read latest threadItems
   // without needing it as a dep (which would cause runStream to recreate constantly).
@@ -310,6 +311,8 @@ export default function ChatShell() {
       <Sidebar
         threads={threads}
         activeThreadId={activeThreadId}
+        isOpen={isSidebarOpen}
+        onClose={() => setSidebarOpen(false)}
         onSelect={handleSelectThread}
         onNewChat={handleNewChat}
         onDelete={handleDeleteThread}
@@ -322,11 +325,19 @@ export default function ChatShell() {
           className="flex md:hidden items-center gap-3 px-4 py-3 shrink-0"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "#070707" }}
         >
+          <button 
+            onClick={() => setSidebarOpen(true)}
+            className="p-1.5 -ml-1.5 rounded-md text-white/70 hover:bg-white/10 transition-colors"
+          >
+            <Menu size={20} />
+          </button>
           <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-black"
             style={{ background: "linear-gradient(135deg, #ffffff, #888888)" }}
           >
-            ⚡
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" />
+            </svg>
           </div>
           <span
             className="font-bold text-sm flex-1"

@@ -218,7 +218,7 @@ export function MorphPanel({ onSend, onFileUpload, disabled, placeholder }: Morp
                 onChange={handleFileChange}
                 disabled={disabled || uploadState === "uploading"}
             />
-            <div className="flex flex-col items-center gap-2" style={{ width: FORM_WIDTH }}>
+            <div className="flex flex-col items-center gap-2 w-full max-w-[360px]">
                 {/* Upload status pill */}
                 <AnimatePresence>
                     {uploadState !== "idle" && (
@@ -232,13 +232,13 @@ export function MorphPanel({ onSend, onFileUpload, disabled, placeholder }: Morp
                                 background: uploadState === "error"
                                     ? "rgba(248,113,113,0.1)"
                                     : uploadState === "done"
-                                    ? "rgba(52,211,153,0.1)"
-                                    : "rgba(255,255,255,0.06)",
+                                        ? "rgba(52,211,153,0.1)"
+                                        : "rgba(255,255,255,0.06)",
                                 border: uploadState === "error"
                                     ? "1px solid rgba(248,113,113,0.3)"
                                     : uploadState === "done"
-                                    ? "1px solid rgba(52,211,153,0.3)"
-                                    : "1px solid rgba(255,255,255,0.1)",
+                                        ? "1px solid rgba(52,211,153,0.3)"
+                                        : "1px solid rgba(255,255,255,0.1)",
                                 color: uploadState === "error" ? "#f87171" : uploadState === "done" ? "#34d399" : "#999",
                             }}
                         >
@@ -267,10 +267,11 @@ export function MorphPanel({ onSend, onFileUpload, disabled, placeholder }: Morp
                     )}
                     initial={false}
                     animate={{
-                        width: showForm ? FORM_WIDTH : "auto",
-                        height: showForm ? FORM_HEIGHT : 44,
+                        width: showForm ? "100%" : "auto",
+                        height: showForm ? "auto" : 44,
                         borderRadius: showForm ? 14 : 20,
                     }}
+                    style={{ maxWidth: FORM_WIDTH }}
                     transition={{
                         type: "spring",
                         stiffness: 550 / SPEED_FACTOR,
@@ -300,7 +301,10 @@ export function MorphPanel({ onSend, onFileUpload, disabled, placeholder }: Morp
 function DockBar({ disabled, onAttachClick }: { disabled?: boolean; onAttachClick?: () => void }) {
     const { showForm, triggerOpen, uploadState } = useFormContext()
     return (
-        <footer className="mt-auto flex h-[44px] items-center justify-center whitespace-nowrap select-none">
+        <footer
+            className="mt-auto flex h-[44px] items-center justify-center whitespace-nowrap select-none w-full"
+            style={{ position: showForm ? "absolute" : "relative", bottom: 0, opacity: showForm ? 0 : 1, pointerEvents: showForm ? "none" : "all" }}
+        >
             <div className="flex items-center justify-center gap-2 px-3 max-sm:h-10 max-sm:px-2">
                 <div className="flex w-fit items-center gap-2">
                     <AnimatePresence mode="wait">
@@ -396,16 +400,26 @@ function InputForm({ ref, onSuccess, disabled, placeholder }: InputFormProps) {
     function handleKeys(e: React.KeyboardEvent<HTMLTextAreaElement>) {
         if (e.key === "Escape") triggerClose()
         if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault()
-            btnRef.current?.click()
+            // Only submit on Enter if we are on a desktop device
+            const isMobile = window.innerWidth <= 768;
+            if (!isMobile) {
+                e.preventDefault()
+                btnRef.current?.click()
+            }
         }
     }
 
     return (
         <form
             onSubmit={handleSubmit}
-            className="absolute bottom-0"
-            style={{ width: FORM_WIDTH, height: FORM_HEIGHT, pointerEvents: showForm ? "all" : "none" }}
+            className="w-full"
+            style={{
+                position: showForm ? "relative" : "absolute",
+                bottom: 0,
+                width: "100%",
+                maxWidth: FORM_WIDTH,
+                pointerEvents: showForm ? "all" : "none"
+            }}
         >
             <AnimatePresence>
                 {showForm && (
@@ -414,20 +428,20 @@ function InputForm({ ref, onSuccess, disabled, placeholder }: InputFormProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ type: "spring", stiffness: 550 / SPEED_FACTOR, damping: 45, mass: 0.7 }}
-                        className="flex h-full flex-col p-1 relative"
+                        className="flex flex-col p-1 relative w-full"
                     >
-                        <div className="flex justify-between py-1">
-                            <p className="text-foreground z-[2] ml-[38px] flex items-center gap-[6px] select-none">
-                                Swift Agent
-                            </p>
-                        </div>
                         <textarea
                             ref={ref}
                             value={value}
-                            onChange={(e) => setValue(e.target.value)}
+                            onChange={(e) => {
+                                setValue(e.target.value);
+                                e.target.style.height = "auto";
+                                e.target.style.height = `${Math.min(e.target.scrollHeight, 300)}px`;
+                            }}
                             placeholder={placeholder ?? "Ask me anything..."}
                             name="message"
-                            className="h-full w-full resize-none scroll-py-2 rounded-md p-4 pb-12 outline-0 bg-transparent text-foreground"
+                            className="w-full resize-none scroll-py-2 rounded-md px-4 pt-4 pb-12 outline-0 bg-transparent text-foreground"
+                            style={{ minHeight: "120px" }}
                             disabled={disabled}
                             onKeyDown={handleKeys}
                             spellCheck={false}
@@ -457,9 +471,12 @@ function InputForm({ ref, onSuccess, disabled, placeholder }: InputFormProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute top-2 left-3"
+                        className="absolute bottom-3 left-3 flex items-center gap-2 pointer-events-none"
                     >
                         <ColorOrb dimension="24px" tones={{ base: "oklch(22.64% 0 0)" }} />
+                        <span className="text-foreground text-sm font-medium opacity-80 select-none">
+                            Ask Swift
+                        </span>
                     </motion.div>
                 )}
             </AnimatePresence>

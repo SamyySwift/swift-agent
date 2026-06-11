@@ -74,12 +74,14 @@ function EmptyState({ onSuggestionClick, onUploadClick }: { onSuggestionClick?: 
             }}
           />
           <div
-            className="logo-glow relative w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
+            className="logo-glow relative w-14 h-14 rounded-2xl flex items-center justify-center text-black"
             style={{
               background: "linear-gradient(135deg, #ffffff 0%, #606060 100%)",
             }}
           >
-            <span style={{ filter: "invert(1)", fontSize: "20px" }}>⚡</span>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" />
+            </svg>
           </div>
         </div>
 
