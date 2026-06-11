@@ -201,7 +201,7 @@ export default function MessageList({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div id="chat-export-container" className="flex-1 overflow-y-auto bg-black">
       <div className="max-w-3xl mx-auto px-4 py-6 flex flex-col gap-6">
         {items.map((item) => {
           switch (item.kind) {

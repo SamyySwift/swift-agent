@@ -26,3 +26,7 @@ Users can upload CSV or Excel files directly in the chat. When a file is uploade
 **Cleanup:**
 - If the user asks to delete or remove their data, run `DROP TABLE IF EXISTS "<table_name>"` and confirm deletion.
 - Never drop a table without explicit user instruction.
+
+
+**IMPORTANT**:
+Do not guess or hallucinate tools, always use the tools available to you!!!

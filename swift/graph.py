@@ -10,7 +10,7 @@ from langgraph.graph import END, START, StateGraph, add_messages
 from langgraph.prebuilt import ToolNode
 from langgraph.types import Command, interrupt
 from langchain_ollama import ChatOllama
-
+from langchain_openai import ChatOpenAI
 from swift.mcp_servers.client import get_all_tools
 from swift.prompts.prompts import swift_system_prompt as SYSTEM_PROMPT
 from swift.tools import generate_visualization
@@ -45,9 +45,10 @@ async def build_graph():
     except Exception as e:
         print(f"Something went wrong while trying to load tools... {e}")
 
-    llm = ChatGroq(
-        model="openai/gpt-oss-120b",
-        temperature=0,
+    llm = ChatOllama(
+        # base_url="https://openrouter.ai/api/v1",
+        model="gemma4:31b-cloud",
+        temperature=0.2,
     ).bind_tools(all_tools)
 
     async def agent_node(state: AgentState) -> AgentState:

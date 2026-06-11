@@ -9,6 +9,7 @@ import type {
   ThreadMeta,
 } from "@/lib/types";
 import { streamRun, fetchThreadHistory } from "@/lib/langgraph";
+import { Download } from "lucide-react";
 import Sidebar from "./Sidebar";
 import MessageList from "./MessageList";
 import { MorphPanel } from "./ui/ai-input";
@@ -214,6 +215,12 @@ export default function ChatShell() {
     [activeThreadId, mutate, registerThread, runStream]
   );
 
+  const handleExportPDF = useCallback(() => {
+    // We can use the native browser print functionality, which users can use to 'Save as PDF'.
+    // This perfectly preserves all vector graphics like Plotly charts without rasterization issues or heavy dependencies.
+    window.print();
+  }, []);
+
   // ── Send new user message ─────────────────────────────────────
   const handleSend = useCallback(
     async (text: string) => {
@@ -321,7 +328,7 @@ export default function ChatShell() {
             ⚡
           </div>
           <span
-            className="font-bold text-sm"
+            className="font-bold text-sm flex-1"
             style={{
               background: "linear-gradient(135deg, #ffffff, #888888)",
               WebkitBackgroundClip: "text",
@@ -333,7 +340,27 @@ export default function ChatShell() {
           >
             Swift Agent
           </span>
+          <button
+            onClick={handleExportPDF}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors no-print"
+            style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff" }}
+          >
+            <Download size={14} />
+            <span>Export</span>
+          </button>
         </header>
+
+        {/* Desktop Export Button */}
+        <div className="absolute top-4 right-4 z-20 hidden md:block no-print">
+          <button
+            onClick={handleExportPDF}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer hover:bg-white/10"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+          >
+            <Download size={16} />
+            <span>Export Chat</span>
+          </button>
+        </div>
 
         {/* Messages — takes remaining space */}
         <div className="flex-1 overflow-hidden flex flex-col relative">

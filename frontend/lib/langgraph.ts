@@ -188,10 +188,24 @@ export async function* streamRun(
           const content = parseContent(msg.content);
 
           if (role === "ai") {
-            if (!currentAiId) {
+            // If we are already tracking an AI message but the incoming msg has a DIFFERENT id,
+            // it means the agent is generating a NEW message (e.g. after a tool call).
+            if (currentAiId && msg.id && currentAiId !== msg.id) {
+              if (accumulatedText) {
+                results.push({
+                  kind: "ai",
+                  id: currentAiId,
+                  text: accumulatedText,
+                  streaming: false,
+                });
+              }
+              currentAiId = msg.id;
+              accumulatedText = "";
+            } else if (!currentAiId) {
               currentAiId = msg.id ?? crypto.randomUUID();
               accumulatedText = "";
             }
+
             if (content && content.length > accumulatedText.length) {
               accumulatedText = content;
               results.push({
@@ -260,12 +274,14 @@ export async function* streamRun(
         const interrupts = state["__interrupt__"];
         if (Array.isArray(interrupts) && interrupts.length > 0) {
           if (currentAiId) {
-            results.push({
-              kind: "ai",
-              id: currentAiId,
-              text: accumulatedText,
-              streaming: false,
-            });
+            if (accumulatedText) {
+              results.push({
+                kind: "ai",
+                id: currentAiId,
+                text: accumulatedText,
+                streaming: false,
+              });
+            }
             currentAiId = null;
             accumulatedText = "";
           }
@@ -301,21 +317,6 @@ export async function* streamRun(
                   isError: msg.status === "error",
                 });
               }
-            }
-          }
-
-          const lastAiMsg = [...messages].reverse().find(m => (m.type ?? m.role) === "ai");
-          if (lastAiMsg) {
-            const content = parseContent(lastAiMsg.content);
-            if (content && content.length > accumulatedText.length) {
-              currentAiId = lastAiMsg.id ?? currentAiId ?? crypto.randomUUID();
-              accumulatedText = content;
-              results.push({
-                kind: "ai",
-                id: currentAiId,
-                text: accumulatedText,
-                streaming: true,
-              });
             }
           }
         }
@@ -365,12 +366,14 @@ export async function* streamRun(
   } finally {
     // Finalise any open AI stream
     if (currentAiId) {
-      yield {
-        kind: "ai",
-        id: currentAiId,
-        text: accumulatedText,
-        streaming: false,
-      };
+      if (accumulatedText) {
+        yield {
+          kind: "ai",
+          id: currentAiId,
+          text: accumulatedText,
+          streaming: false,
+        };
+      }
     }
   }
 }

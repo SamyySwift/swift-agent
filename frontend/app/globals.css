@@ -371,3 +371,37 @@ pre,
   background-size: 200px 100%;
   animation: shine 3s linear infinite;
 }
+
+/* ── Print Styles (PDF Export) ─────────────────────────────────── */
+@media print {
+  /* Reset full-height & overflow constraints to allow browser pagination */
+  html, body, #__next {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .h-screen, .h-full, .overflow-hidden, .overflow-y-auto {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Hide UI elements not meant for export */
+  header, aside, form, .no-print {
+    display: none !important;
+  }
+
+  /* Ensure colors and backgrounds print perfectly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent page breaks inside messages or charts */
+  .max-w-3xl > div, .glass, .prose-chat, .suggestion-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}

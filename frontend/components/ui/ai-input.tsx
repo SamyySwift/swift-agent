@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { ArrowUp } from "lucide-react"
 
 // ── Color orb ──────────────────────────────────────────────────────
 
@@ -394,7 +395,7 @@ function InputForm({ ref, onSuccess, disabled, placeholder }: InputFormProps) {
 
     function handleKeys(e: React.KeyboardEvent<HTMLTextAreaElement>) {
         if (e.key === "Escape") triggerClose()
-        if (e.key === "Enter" && e.metaKey) {
+        if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault()
             btnRef.current?.click()
         }
@@ -413,21 +414,12 @@ function InputForm({ ref, onSuccess, disabled, placeholder }: InputFormProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ type: "spring", stiffness: 550 / SPEED_FACTOR, damping: 45, mass: 0.7 }}
-                        className="flex h-full flex-col p-1"
+                        className="flex h-full flex-col p-1 relative"
                     >
                         <div className="flex justify-between py-1">
                             <p className="text-foreground z-[2] ml-[38px] flex items-center gap-[6px] select-none">
                                 Swift Agent
                             </p>
-                            <button
-                                type="submit"
-                                ref={btnRef}
-                                disabled={disabled || !value.trim()}
-                                className="text-foreground right-4 mt-1 flex -translate-y-[3px] cursor-pointer items-center justify-center gap-1 rounded-[12px] bg-transparent pr-1 text-center select-none disabled:opacity-40"
-                            >
-                                <KeyHint>⌘</KeyHint>
-                                <KeyHint className="w-fit">Enter</KeyHint>
-                            </button>
                         </div>
                         <textarea
                             ref={ref}
@@ -435,11 +427,25 @@ function InputForm({ ref, onSuccess, disabled, placeholder }: InputFormProps) {
                             onChange={(e) => setValue(e.target.value)}
                             placeholder={placeholder ?? "Ask me anything..."}
                             name="message"
-                            className="h-full w-full resize-none scroll-py-2 rounded-md p-4 outline-0 bg-transparent text-foreground"
+                            className="h-full w-full resize-none scroll-py-2 rounded-md p-4 pb-12 outline-0 bg-transparent text-foreground"
                             disabled={disabled}
                             onKeyDown={handleKeys}
                             spellCheck={false}
                         />
+                        <button
+                            type="submit"
+                            ref={btnRef}
+                            disabled={disabled || !value.trim()}
+                            className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                            style={{
+                                background: "#ffffff",
+                                color: "#000000",
+                                border: "1px solid var(--border)",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                        >
+                            <ArrowUp size={18} strokeWidth={2.5} />
+                        </button>
                     </motion.div>
                 )}
             </AnimatePresence>
