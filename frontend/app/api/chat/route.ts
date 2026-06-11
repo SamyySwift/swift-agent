@@ -5,7 +5,6 @@ const BASE_URL =
 const GRAPH_ID = process.env.LANGGRAPH_GRAPH_ID || "swift";
 
 export const runtime = "nodejs";
-export const maxDuration = 60; // Max allowed for Vercel hobby plan
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
