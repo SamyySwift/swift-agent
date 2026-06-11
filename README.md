@@ -9,12 +9,14 @@ Swift Agent is a sophisticated AI data analyst and workflow agent powered by **L
 - **Database Management**: Full capability to read schemas, execute complex SQL queries, apply migrations, and manage database state securely.
 - **Project Lifecycle Management**: Tools for creating, pausing, and deleting projects (e.g., Supabase integration).
 - **Human-in-the-Loop (HITL)**: Sensitive operations (Protected Tools) require explicit user approval. Users can approve, update arguments, provide feedback, or reject actions before they execute.
+- **Export Chat**: Export your entire conversation history—including interactive Plotly graphics—into a cleanly formatted PDF document with a single click.
+- **Robust Model Fallbacks**: Configured with LangChain fallbacks to seamlessly switch to an alternate LLM (maintaining full tool-calling capabilities) if the primary model encounters API issues or timeouts.
 - **Observability**: Full tracing and debugging support out of the box via **LangSmith**.
 
 ## Visual Demos
 
 ### Interactive Plotly Visualizations
-![Data Visualization Demo](./static/plot.png)
+![Data Visualization Demo](./static/plot2.png)
 
 ### Human-in-the-Loop Interrupts
 ![HITL Interrupt Demo](./static/interupt.png)
