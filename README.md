@@ -1,26 +1,57 @@
-# Swift Agent 🚀
+# Swift Agent
 
-Swift Agent is a sophisticated AI agent powered by **LangGraph** and the **Model Context Protocol (MCP)**. It is designed to be a versatile assistant capable of executing complex tasks, managing projects, and interacting with databases, all while maintaining a strict safety layer through a human-in-the-loop (HITL) approval system.
+Swift Agent is a sophisticated AI data analyst and workflow agent powered by **LangGraph** and the **Model Context Protocol (MCP)**. It is designed to be a versatile assistant capable of ingesting raw data, executing complex analytical tasks, managing projects, and interacting with databases—all while maintaining a strict safety layer through a human-in-the-loop (HITL) approval system.
 
-## ✨ Key Features
+## Key Capabilities
 
-- **LangGraph Orchestration**: Uses a state-driven graph to manage complex agentic workflows.
-- **MCP Integration**: Leverages MCP servers to dynamically load and utilize a wide array of tools.
-- **Human-in-the-Loop (HITL)**: Sensitive operations (Protected Tools) require explicit user approval. Users can:
-    - **Approve**: Allow the tool to run as requested.
-    - **Update**: Modify the tool arguments before execution.
-    - **Feedback**: Provide guidance to the agent to refine its approach.
-    - **Reject**: Block the operation entirely.
-- **Database Management**: Capabilities including SQL execution and migration applications.
-- **Project Lifecycle**: Tools for creating and deleting projects.
+- **Automated Data Analysis**: Upload CSV or Excel files directly in the chat. The agent automatically parses the data using Pandas, provisions a table in a Postgres database, and loads the data for full SQL querying power.
+- **Dynamic Visualization**: The agent writes and executes Python code to generate Plotly visualizations, which are instantly rendered interactively on the Next.js frontend.
+- **Database Management**: Full capability to read schemas, execute complex SQL queries, apply migrations, and manage database state securely.
+- **Project Lifecycle Management**: Tools for creating, pausing, and deleting projects (e.g., Supabase integration).
+- **Human-in-the-Loop (HITL)**: Sensitive operations (Protected Tools) require explicit user approval. Users can approve, update arguments, provide feedback, or reject actions before they execute.
+- **Observability**: Full tracing and debugging support out of the box via **LangSmith**.
 
-## 🏗️ Architecture
+## Visual Demos
+
+### Interactive Plotly Visualizations
+![Data Visualization Demo](./static/plot.png)
+
+### Human-in-the-Loop Interrupts
+![HITL Interrupt Demo](./static/interupt.png)
+
+## Architecture
 
 The agent is implemented as a state machine using LangGraph:
 
-1. **`agent_node`**: The core LLM (via Groq/GPT) that decides which tools to call based on the user's request.
+1. **`agent_node`**: The core LLM (via Groq/GPT) that evaluates the user's request and decides which tools to call.
 2. **`human_review_node`**: A safety gate that intercepts "Protected Tools." It pauses execution using LangGraph's `interrupt` mechanism until a human provides a decision.
 3. **`tools_node`**: A specialized node that executes all approved and safe tool calls in parallel.
+
+### Execution Graph
+
+```mermaid
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	agent_node(agent_node)
+	tools_node(tools_node)
+	human_review_node(human_review_node)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> agent_node;
+	agent_node -.-> __end__;
+	agent_node -.-> human_review_node;
+	agent_node -.-> tools_node;
+	human_review_node -.-> agent_node;
+	human_review_node -.-> tools_node;
+	tools_node --> agent_node;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
+```
 
 ### Protected Tools
 The following tools are marked as protected and will always trigger a human review:
@@ -29,14 +60,25 @@ The following tools are marked as protected and will always trigger a human revi
 - `execute_sql`
 - `apply_migration`
 
-## 🚀 Getting Started
+## Tech Stack
+
+- **Orchestration**: LangGraph
+- **API & Routing**: FastAPI
+- **Tooling**: Model Context Protocol (MCP)
+- **Data Processing**: Pandas, openpyxl
+- **Visualization**: Plotly, react-plotly.js
+- **Frontend**: Next.js, Tailwind CSS, Framer Motion
+- **Package Management**: uv
+
+## Getting Started
 
 ### Prerequisites
 - Python 3.12+
-- [uv](https://github.com/astral-sh/uv) (Recommended package manager)
-- API Keys for your LLM provider (e.g., Groq, OpenAI)
+- [uv](https://github.com/astral-sh/uv)
+- Node.js & npm (for the frontend)
+- API Keys (Groq/OpenAI, LangSmith, Supabase, etc.)
 
-### Setup
+### Backend Setup
 
 1. **Clone the Repository**
    ```bash
@@ -45,7 +87,6 @@ The following tools are marked as protected and will always trigger a human revi
    ```
 
 2. **Environment Setup**
-   Using `uv` for fast and reliable dependency management:
    ```bash
    uv venv
    uv sync
@@ -53,31 +94,29 @@ The following tools are marked as protected and will always trigger a human revi
    ```
 
 3. **Configuration**
-   Create a `.env` file in the root directory and add your required keys:
+   Create a `.env` file in the root directory:
    ```env
    GROQ_API_KEY=your_api_key_here
-   # Add other necessary MCP or Database keys
+   SUPABASE_DB_URI=your_postgres_connection_string
+   LANGSMITH_TRACING=true
+   LANGSMITH_API_KEY=your_langsmith_key
    ```
 
 4. **Running the Agent**
-   You can interact with the agent via the provided frontend scripts in the `frontend/` directory:
+   Use the LangGraph CLI for a local development server with studio access:
    ```bash
-   python frontend/chat_local.py
+   langgraph dev
    ```
 
-## 📂 Project Structure
+### Frontend Setup
 
-- `swift/`: Core agent logic.
-    - `graph.py`: Defines the LangGraph state machine and nodes.
-    - `env.py`: Environment and configuration management.
-    - `mcp_servers/`: Client implementation and MCP server configurations.
-    - `prompts/`: System prompts and specialized instruction sets.
-- `frontend/`: Simple chat interfaces for local and deployed versions.
-- `static/`: Visual assets and documentation images.
-- `pyproject.toml` & `uv.lock`: Python project dependencies and lockfile.
-
-## 🛠️ Tech Stack
-- **Framework**: [LangGraph](https://langchain-ai.github.io/langgraph/)
-- **LLM**: [Groq](https://groq.com/) / GPT
-- **Tooling**: [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
-- **Package Management**: [uv](https://github.com/astral-sh/uv)
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   npm install
+   ```
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+3. Open `http://localhost:3000` to interact with the agent.

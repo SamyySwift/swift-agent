@@ -18,7 +18,9 @@ export default function PlotlyRenderer({ dataStr }: { dataStr: string }) {
           margin: { t: 50, r: 30, l: 60, b: 120 },
           paper_bgcolor: "transparent",
           plot_bgcolor: "transparent",
-          font: { color: "var(--text)" },
+          font: { ...(parsed.layout?.font || {}), color: "white" },
+          xaxis: { ...(parsed.layout?.xaxis || {}), color: "white", gridcolor: "rgba(255,255,255,0.1)", zerolinecolor: "rgba(255,255,255,0.2)" },
+          yaxis: { ...(parsed.layout?.yaxis || {}), color: "white", gridcolor: "rgba(255,255,255,0.1)", zerolinecolor: "rgba(255,255,255,0.2)" },
         },
       };
     } catch (e) {

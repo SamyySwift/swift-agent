@@ -211,3 +211,4 @@ async def build_graph():
 
 
 graph = asyncio.run(build_graph())
+graph.get_graph().draw_mermaid_png(output_file_path="./static/graph.png")
