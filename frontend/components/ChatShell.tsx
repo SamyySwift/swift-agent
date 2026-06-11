@@ -10,6 +10,7 @@ import type {
 } from "@/lib/types";
 import { streamRun, fetchThreadHistory } from "@/lib/langgraph";
 import { Download } from "lucide-react";
+import { usePDF } from "react-to-pdf";
 import Sidebar from "./Sidebar";
 import MessageList from "./MessageList";
 import { MorphPanel } from "./ui/ai-input";
@@ -215,11 +216,11 @@ export default function ChatShell() {
     [activeThreadId, mutate, registerThread, runStream]
   );
 
+  const { toPDF, targetRef } = usePDF({ filename: `chat-export.pdf` });
+
   const handleExportPDF = useCallback(() => {
-    // We can use the native browser print functionality, which users can use to 'Save as PDF'.
-    // This perfectly preserves all vector graphics like Plotly charts without rasterization issues or heavy dependencies.
-    window.print();
-  }, []);
+    toPDF();
+  }, [toPDF]);
 
   // ── Send new user message ─────────────────────────────────────
   const handleSend = useCallback(
@@ -383,6 +384,7 @@ export default function ChatShell() {
             isStreaming={isStreaming}
             onInterruptDecide={handleInterruptDecide}
             onSuggestionClick={handleSend}
+            targetRef={targetRef as React.RefObject<HTMLDivElement>}
             onUploadClick={() => {
               // Trigger the file input in MorphPanel by simulating a click on the attach button
               document.getElementById("attach-file-btn")?.click();

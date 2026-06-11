@@ -24,6 +24,7 @@ interface Props {
   onInterruptDecide: (id: string, decision: InterruptDecision) => void;
   onSuggestionClick?: (text: string) => void;
   onUploadClick?: () => void;
+  targetRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 // ── Suggestion card data ─────────────────────────────────────────
@@ -189,6 +190,7 @@ export default function MessageList({
   onInterruptDecide,
   onSuggestionClick,
   onUploadClick,
+  targetRef,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -202,7 +204,7 @@ export default function MessageList({
 
   return (
     <div id="chat-export-container" className="flex-1 overflow-y-auto bg-black">
-      <div className="max-w-3xl mx-auto px-4 py-6 flex flex-col gap-6">
+      <div ref={targetRef} className="max-w-3xl mx-auto px-4 py-6 flex flex-col gap-6 bg-black">
         {items.map((item) => {
           switch (item.kind) {
             case "human":

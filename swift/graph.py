@@ -45,9 +45,9 @@ async def build_graph():
     except Exception as e:
         print(f"Something went wrong while trying to load tools... {e}")
 
-    llm = ChatOllama(
+    llm = ChatGroq(
         # base_url="https://openrouter.ai/api/v1",
-        model="gemma4:31b-cloud",
+        model="openai/gpt-oss-120b",
         temperature=0.2,
     ).bind_tools(all_tools)
 
