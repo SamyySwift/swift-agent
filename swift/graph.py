@@ -45,9 +45,9 @@ async def build_graph():
     except Exception as e:
         print(f"Something went wrong while trying to load tools... {e}")
 
-    llm = ChatOllama(
-        model="gemma4:31b-cloud",
-        streaming=True,
+    llm = ChatGroq(
+        model="llama3-70b-8192",
+        temperature=0,
     ).bind_tools(all_tools)
 
     async def agent_node(state: AgentState) -> AgentState:
