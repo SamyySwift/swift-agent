@@ -14,10 +14,20 @@ function tryPretty(raw: string): { pretty: string; isJson: boolean } {
   }
 }
 
+import PlotlyRenderer from "./PlotlyRenderer";
+
 export default function ToolResultCard({ name, content, isError }: Props) {
   const [open, setOpen] = useState(false);
   const { pretty } = tryPretty(content);
   const preview = pretty.length > 120 ? pretty.slice(0, 120) + "…" : pretty;
+
+  if (name === "generate_visualization" && !isError) {
+    return (
+      <div className="w-full animate-in fade-in slide-in-from-bottom-2">
+        <PlotlyRenderer dataStr={content} />
+      </div>
+    );
+  }
 
   const color     = isError ? "var(--red)"   : "var(--green)";
   const dimColor  = isError ? "var(--red-dim)" : "var(--green-dim)";

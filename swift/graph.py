@@ -9,19 +9,14 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph, add_messages
 from langgraph.prebuilt import ToolNode
 from langgraph.types import Command, interrupt
-from pydantic import BaseModel
+from langchain_ollama import ChatOllama
 
 from swift.mcp_servers.client import get_all_tools
+from swift.prompts.prompts import swift_system_prompt as SYSTEM_PROMPT
+from swift.tools import generate_visualization
 
 load_dotenv()
 
-
-SYSTEM_PROMPT = """
-You're an helpful ai agent called Swift, excellent at ustilizing
-your available tools to answer the user's questions. SOme tools 
-are protected meaning they need human approval.
-
-"""
 PROTECTED_TOOLS = [
     "create_project",
     "delete_project",
@@ -43,21 +38,34 @@ async def build_graph():
 
     print("Loading tools...")
     all_tools = await get_all_tools()
+    all_tools.append(generate_visualization)
 
     try:
         print(f"Loaded {len(all_tools)} tools.")
     except Exception as e:
         print(f"Something went wrong while trying to load tools... {e}")
 
-    llm = ChatGroq(
-        model="openai/gpt-oss-120b",
+    llm = ChatOllama(
+        model="gemma4:31b-cloud",
         streaming=True,
-    ).bind_tools(all_tools, parallel_tool_calls=True)
+    ).bind_tools(all_tools)
 
     async def agent_node(state: AgentState) -> AgentState:
+        messages_for_llm = []
+        for msg in state["messages"]:
+            if getattr(msg, "name", "") == "generate_visualization" and isinstance(msg, ToolMessage):
+                messages_for_llm.append(
+                    ToolMessage(
+                        content="Plot generated and rendered on the frontend successfully. You do not need to output the plot data.",
+                        name=msg.name,
+                        tool_call_id=msg.tool_call_id
+                    )
+                )
+            else:
+                messages_for_llm.append(msg)
 
         response = await llm.ainvoke(
-            [SystemMessage(content=SYSTEM_PROMPT), *state["messages"]]
+            [SystemMessage(content=SYSTEM_PROMPT), *messages_for_llm]
         )
 
         return {"messages": [response]}

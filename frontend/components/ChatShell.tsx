@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   AIItem,
   ChatItem,
+  FileUploadItem,
   InterruptDecision,
   ThreadMeta,
 } from "@/lib/types";
@@ -42,6 +43,11 @@ export default function ChatShell() {
   const [threadItems, setThreadItems] = useState<Record<string, ChatItem[]>>({});
   const [isStreaming, setIsStreaming] = useState(false);
   const [loadingThread, setLoadingThread] = useState(false);
+
+  // Always-current ref so closures inside useCallback can read latest threadItems
+  // without needing it as a dep (which would cause runStream to recreate constantly).
+  const threadItemsRef = useRef(threadItems);
+  useEffect(() => { threadItemsRef.current = threadItems; }, [threadItems]);
 
   useEffect(() => {
     setThreads(loadThreads());
@@ -83,11 +89,22 @@ export default function ChatShell() {
       let resolvedTid = opts.threadId ?? null;
       let registeredHuman = false;
 
+      // Collect IDs of tool_result items already in the UI so we don't re-emit them
+      // when the `values` event fires with the full historical thread state.
+      // Use the ref so we always read the CURRENT items, not a stale closure snapshot.
+      const existingItems = opts.threadId ? (threadItemsRef.current[opts.threadId] ?? []) : [];
+      const knownToolResultIds = new Set(
+        existingItems
+          .filter((i) => i.kind === "tool_result")
+          .map((i) => i.id)
+      );
+
       try {
         for await (const event of streamRun({
           threadId: opts.threadId,
           input: opts.input,
           command: opts.command,
+          knownToolResultIds,
           onThreadId: (tid) => {
             resolvedTid = tid;
             setActiveThreadId(tid);
@@ -110,7 +127,9 @@ export default function ChatShell() {
           if (event.kind === "ai") {
             mutate(tid, (prev) => upsertItem(prev, event as AIItem));
           } else {
-            mutate(tid, (prev) => [...prev, event]);
+            // Use upsertItem for all kinds so duplicate IDs from the stream
+            // are updated in place rather than appended again.
+            mutate(tid, (prev) => upsertItem(prev, event));
           }
         }
       } catch (err) {
@@ -125,6 +144,74 @@ export default function ChatShell() {
       }
     },
     [mutate, registerThread]
+  );
+
+  // ── Handle file upload ────────────────────────────────────────
+  const handleFileUpload = useCallback(
+    async (file: File) => {
+      // Ensure we have a thread first
+      let tid = activeThreadId;
+      if (!tid) {
+        // Create a thread via the chat endpoint with an empty input to get a thread_id
+        // We'll create it inline here
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input: { messages: [] } }),
+        });
+        tid = res.headers.get("X-Thread-Id");
+        if (tid) {
+          setActiveThreadId(tid);
+          registerThread(tid, `${file.name} analysis`);
+        }
+      }
+
+      if (!tid) throw new Error("Could not create thread");
+
+      // Upload the file to the backend
+      const form = new FormData();
+      form.append("file", file);
+      form.append("thread_id", tid);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: form,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail ?? `Upload failed: ${res.status}`);
+      }
+
+      const data = await res.json() as {
+        table_name: string;
+        columns: { name: string; dtype: string }[];
+        row_count: number;
+        preview: Record<string, unknown>[];
+      };
+
+      // Add the file upload chat bubble
+      const fileItem: FileUploadItem = {
+        kind: "file_upload",
+        id: crypto.randomUUID(),
+        filename: file.name,
+        tableName: data.table_name,
+        rowCount: data.row_count,
+        columns: data.columns,
+        preview: data.preview,
+      };
+      mutate(tid, (prev) => [...prev, fileItem]);
+
+      // Auto-send context message to the agent
+      const colList = data.columns.map((c) => `${c.name} (${c.dtype})`).join(", ");
+      const agentMessage = `I've uploaded a file called "${file.name}". It has been loaded into a Postgres table named "${data.table_name}". It has ${data.row_count.toLocaleString()} rows and ${data.columns.length} columns: ${colList}. Please analyze this data and suggest what we can explore.`;
+
+      await runStream({
+        threadId: tid,
+        input: { messages: [{ role: "human", content: agentMessage }] },
+      });
+    },
+    [activeThreadId, mutate, registerThread, runStream]
   );
 
   // ── Send new user message ─────────────────────────────────────
@@ -269,6 +356,10 @@ export default function ChatShell() {
             isStreaming={isStreaming}
             onInterruptDecide={handleInterruptDecide}
             onSuggestionClick={handleSend}
+            onUploadClick={() => {
+              // Trigger the file input in MorphPanel by simulating a click on the attach button
+              document.getElementById("attach-file-btn")?.click();
+            }}
           />
         </div>
 
@@ -280,11 +371,12 @@ export default function ChatShell() {
           <div className="max-w-3xl mx-auto flex justify-center">
             <MorphPanel
               onSend={handleSend}
+              onFileUpload={handleFileUpload}
               disabled={isStreaming}
               placeholder={
                 isStreaming
                   ? "Swift is thinking…"
-                  : "Message Swift — ask about your Supabase projects…"
+                  : "Message Swift — ask about your data or Supabase projects…"
               }
             />
 

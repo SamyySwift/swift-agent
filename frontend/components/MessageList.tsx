@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import type {
   AIItem,
   ChatItem,
+  FileUploadItem,
   HumanItem,
   InterruptDecision,
   InterruptItem,
@@ -15,16 +16,25 @@ import { AIBubble, ErrorBubble, HumanBubble } from "./MessageBubble";
 import ToolCallCard from "./ToolCallCard";
 import ToolResultCard from "./ToolResultCard";
 import InterruptCard from "./InterruptCard";
+import FileUploadItemComp from "./FileUploadItem";
 
 interface Props {
   items: ChatItem[];
   isStreaming: boolean;
   onInterruptDecide: (id: string, decision: InterruptDecision) => void;
   onSuggestionClick?: (text: string) => void;
+  onUploadClick?: () => void;
 }
 
 // ── Suggestion card data ─────────────────────────────────────────
 const SUGGESTIONS = [
+  {
+    icon: "⬆",
+    label: "Upload data",
+    prompt: "",
+    desc: "Analyze your CSV or Excel file",
+    isUpload: true,
+  },
   {
     icon: "◈",
     label: "List projects",
@@ -43,16 +53,10 @@ const SUGGESTIONS = [
     prompt: "What extensions are enabled?",
     desc: "Check active Postgres extensions",
   },
-  {
-    icon: "⊕",
-    label: "New project",
-    prompt: "Create a new Supabase project",
-    desc: "Spin up a new environment",
-  },
 ];
 
 // ── Empty state ───────────────────────────────────────────────────
-function EmptyState({ onSuggestionClick }: { onSuggestionClick?: (text: string) => void }) {
+function EmptyState({ onSuggestionClick, onUploadClick }: { onSuggestionClick?: (text: string) => void; onUploadClick?: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-10 px-6 py-16">
       {/* Logo + heading */}
@@ -105,13 +109,13 @@ function EmptyState({ onSuggestionClick }: { onSuggestionClick?: (text: string) 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-xl">
         {SUGGESTIONS.map((s, i) => (
           <button
-            key={s.prompt}
+            key={s.label}
             id={`suggestion-${i}`}
-            onClick={() => onSuggestionClick?.(s.prompt)}
+            onClick={() => s.isUpload ? onUploadClick?.() : onSuggestionClick?.(s.prompt)}
             className="suggestion-card text-left px-4 py-4 rounded-2xl cursor-pointer group"
             style={{
-              background: "rgba(255,255,255,0.02)",
-              border: "1px solid rgba(255,255,255,0.07)",
+              background: s.isUpload ? "rgba(167,139,250,0.05)" : "rgba(255,255,255,0.02)",
+              border: s.isUpload ? "1px solid rgba(167,139,250,0.2)" : "1px solid rgba(255,255,255,0.07)",
               animationDelay: `${i * 60}ms`,
               animationFillMode: "both",
             }}
@@ -184,6 +188,7 @@ export default function MessageList({
   isStreaming,
   onInterruptDecide,
   onSuggestionClick,
+  onUploadClick,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -192,7 +197,7 @@ export default function MessageList({
   }, [items]);
 
   if (items.length === 0 && !isStreaming) {
-    return <EmptyState onSuggestionClick={onSuggestionClick} />;
+    return <EmptyState onSuggestionClick={onSuggestionClick} onUploadClick={onUploadClick} />;
   }
 
   return (
@@ -244,6 +249,10 @@ export default function MessageList({
             case "error":
               return (
                 <ErrorBubble key={item.id} message={(item as ErrorItem).message} />
+              );
+            case "file_upload":
+              return (
+                <FileUploadItemComp key={item.id} item={item as FileUploadItem} />
               );
           }
         })}

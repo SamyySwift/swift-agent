@@ -20,6 +20,8 @@ interface StreamRunOptions {
   input?: { messages: { role: string; content: string }[] };
   command?: { resume: unknown };
   onThreadId?: (id: string) => void;
+  /** IDs of tool_result items already rendered in the UI — skip re-emitting them */
+  knownToolResultIds?: Set<string>;
 }
 
 function parseContent(content: string | ContentBlock[] | undefined): string {
@@ -104,7 +106,7 @@ export async function fetchThreadHistory(threadId: string): Promise<ChatItem[]> 
 export async function* streamRun(
   opts: StreamRunOptions
 ): AsyncGenerator<ChatItem> {
-  const { threadId, input, command, onThreadId } = opts;
+  const { threadId, input, command, onThreadId, knownToolResultIds } = opts;
 
   const res = await fetch("/api/chat", {
     method: "POST",
@@ -130,6 +132,9 @@ export async function* streamRun(
   let currentAiId: string | null = null;
   let accumulatedText = "";
   const seenToolCallIds = new Set<string>();
+  // Track tool result message IDs we've already emitted (to avoid duplicates)
+  // Pre-seed with any IDs already rendered in the UI from previous runs.
+  const seenToolResultIds = new Set<string>(knownToolResultIds ?? []);
 
   // Parse SSE lines
   function* parseSSE(chunk: string): Generator<{ event: string; data: string }> {
@@ -222,17 +227,27 @@ export async function* streamRun(
               accumulatedText = "";
             }
 
-            const raw =
-              typeof msg.content === "string"
-                ? msg.content
-                : JSON.stringify(msg.content);
-            results.push({
-              kind: "tool_result",
-              id: crypto.randomUUID(),
-              name: msg.name ?? "tool",
-              content: raw,
-              isError: msg.status === "error",
-            });
+            // Skip generate_visualization tool results from partial events —
+            // the full JSON will be reliably emitted from the `values` event.
+            // For other tools, emit immediately as usual.
+            const toolName = msg.name ?? "tool";
+            if (toolName !== "generate_visualization") {
+              const rid = msg.id ?? "";
+              if (!rid || !seenToolResultIds.has(rid)) {
+                if (rid) seenToolResultIds.add(rid);
+                const raw =
+                  typeof msg.content === "string"
+                    ? msg.content
+                    : JSON.stringify(msg.content);
+                results.push({
+                  kind: "tool_result",
+                  id: rid || crypto.randomUUID(),
+                  name: toolName,
+                  content: raw,
+                  isError: msg.status === "error",
+                });
+              }
+            }
           }
         }
         return results;
@@ -266,6 +281,29 @@ export async function* streamRun(
 
         const messages = state["messages"] as RawMessage[] | undefined;
         if (Array.isArray(messages)) {
+          // Emit any generate_visualization tool results that haven't been seen yet
+          // We do this from the values event so the content is guaranteed to be complete.
+          for (const msg of messages) {
+            const role = msg.type ?? msg.role ?? "";
+            if (role === "tool" && (msg.name ?? "") === "generate_visualization") {
+              const rid = msg.id ?? "";
+              if (rid && !seenToolResultIds.has(rid)) {
+                seenToolResultIds.add(rid);
+                const raw =
+                  typeof msg.content === "string"
+                    ? msg.content
+                    : JSON.stringify(msg.content);
+                results.push({
+                  kind: "tool_result",
+                  id: rid,
+                  name: "generate_visualization",
+                  content: raw,
+                  isError: msg.status === "error",
+                });
+              }
+            }
+          }
+
           const lastAiMsg = [...messages].reverse().find(m => (m.type ?? m.role) === "ai");
           if (lastAiMsg) {
             const content = parseContent(lastAiMsg.content);

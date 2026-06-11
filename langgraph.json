@@ -4,5 +4,8 @@
     "swift": "./swift/graph.py:graph"
   },
   "env": ".env",
-  "python_version": "3.14"
+  "python_version": "3.14",
+  "http": {
+    "app": "./swift/webapp.py:app"
+  }
 }

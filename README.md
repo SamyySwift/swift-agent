@@ -7,10 +7,10 @@ Swift Agent is a sophisticated AI agent powered by **LangGraph** and the **Model
 - **LangGraph Orchestration**: Uses a state-driven graph to manage complex agentic workflows.
 - **MCP Integration**: Leverages MCP servers to dynamically load and utilize a wide array of tools.
 - **Human-in-the-Loop (HITL)**: Sensitive operations (Protected Tools) require explicit user approval. Users can:
-    - ✅ **Approve**: Allow the tool to run as requested.
-    - 📝 **Update**: Modify the tool arguments before execution.
-    - 💬 **Feedback**: Provide guidance to the agent to refine its approach.
-    - ❌ **Reject**: Block the operation entirely.
+    - **Approve**: Allow the tool to run as requested.
+    - **Update**: Modify the tool arguments before execution.
+    - **Feedback**: Provide guidance to the agent to refine its approach.
+    - **Reject**: Block the operation entirely.
 - **Database Management**: Capabilities including SQL execution and migration applications.
 - **Project Lifecycle**: Tools for creating and deleting projects.
 

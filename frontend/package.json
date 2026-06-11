@@ -14,15 +14,18 @@
     "lucide-react": "^1.17.0",
     "motion": "^12.40.0",
     "next": "16.2.7",
+    "plotly.js-dist-min": "^3.6.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
+    "react-plotly.js": "^3.0.0",
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-plotly.js": "^2.6.4",
     "autoprefixer": "^10.5.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",

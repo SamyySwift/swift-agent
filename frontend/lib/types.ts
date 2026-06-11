@@ -37,7 +37,8 @@ export type ChatItemKind =
   | "tool_call"
   | "tool_result"
   | "interrupt"
-  | "error";
+  | "error"
+  | "file_upload";
 
 export interface HumanItem {
   kind: "human";
@@ -80,13 +81,29 @@ export interface ErrorItem {
   message: string;
 }
 
+export interface FileUploadColumn {
+  name: string;
+  dtype: string;
+}
+
+export interface FileUploadItem {
+  kind: "file_upload";
+  id: string;
+  filename: string;
+  tableName: string;
+  rowCount: number;
+  columns: FileUploadColumn[];
+  preview: Record<string, unknown>[];
+}
+
 export type ChatItem =
   | HumanItem
   | AIItem
   | ToolCallItem
   | ToolResultItem
   | InterruptItem
-  | ErrorItem;
+  | ErrorItem
+  | FileUploadItem;
 
 // ──────────────────────────────────────────────────
 // Interrupt shape from the LangGraph values event

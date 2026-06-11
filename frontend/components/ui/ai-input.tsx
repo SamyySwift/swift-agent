@@ -125,6 +125,8 @@ const SPEED_FACTOR = 1
 interface ContextShape {
     showForm: boolean
     successFlag: boolean
+    uploadState: "idle" | "uploading" | "done" | "error"
+    uploadFilename: string
     triggerOpen: () => void
     triggerClose: () => void
 }
@@ -136,6 +138,7 @@ const useFormContext = () => React.useContext(FormContext)
 
 interface MorphPanelProps {
     onSend: (text: string) => void
+    onFileUpload?: (file: File) => Promise<void>
     disabled?: boolean
     placeholder?: string
 }
@@ -143,12 +146,15 @@ interface MorphPanelProps {
 const FORM_WIDTH = 360
 const FORM_HEIGHT = 200
 
-export function MorphPanel({ onSend, disabled, placeholder }: MorphPanelProps) {
+export function MorphPanel({ onSend, onFileUpload, disabled, placeholder }: MorphPanelProps) {
     const wrapperRef = React.useRef<HTMLDivElement>(null)
     const textareaRef = React.useRef<HTMLTextAreaElement | null>(null)
+    const fileInputRef = React.useRef<HTMLInputElement>(null)
 
     const [showForm, setShowForm] = React.useState(false)
     const [successFlag, setSuccessFlag] = React.useState(false)
+    const [uploadState, setUploadState] = React.useState<"idle" | "uploading" | "done" | "error">("idle")
+    const [uploadFilename, setUploadFilename] = React.useState("")
 
     const triggerClose = React.useCallback(() => {
         setShowForm(false)
@@ -168,6 +174,22 @@ export function MorphPanel({ onSend, disabled, placeholder }: MorphPanelProps) {
         setTimeout(() => setSuccessFlag(false), 1500)
     }, [onSend, triggerClose])
 
+    const handleFileChange = React.useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !onFileUpload) return
+        e.target.value = ""
+        setUploadFilename(file.name)
+        setUploadState("uploading")
+        try {
+            await onFileUpload(file)
+            setUploadState("done")
+            setTimeout(() => setUploadState("idle"), 3000)
+        } catch {
+            setUploadState("error")
+            setTimeout(() => setUploadState("idle"), 4000)
+        }
+    }, [onFileUpload])
+
     React.useEffect(() => {
         function clickOutsideHandler(e: MouseEvent) {
             if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node) && showForm) {
@@ -179,19 +201,68 @@ export function MorphPanel({ onSend, disabled, placeholder }: MorphPanelProps) {
     }, [showForm, triggerClose])
 
     const ctx = React.useMemo(
-        () => ({ showForm, successFlag, triggerOpen, triggerClose }),
-        [showForm, successFlag, triggerOpen, triggerClose]
+        () => ({ showForm, successFlag, uploadState, uploadFilename, triggerOpen, triggerClose }),
+        [showForm, successFlag, uploadState, uploadFilename, triggerOpen, triggerClose]
     )
 
     return (
         <>
             <OrbStyles />
-            <div className="flex items-center justify-center" style={{ width: FORM_WIDTH, height: FORM_HEIGHT }}>
+            {/* Hidden file input */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                className="hidden"
+                onChange={handleFileChange}
+                disabled={disabled || uploadState === "uploading"}
+            />
+            <div className="flex flex-col items-center gap-2" style={{ width: FORM_WIDTH }}>
+                {/* Upload status pill */}
+                <AnimatePresence>
+                    {uploadState !== "idle" && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
+                            style={{
+                                background: uploadState === "error"
+                                    ? "rgba(248,113,113,0.1)"
+                                    : uploadState === "done"
+                                    ? "rgba(52,211,153,0.1)"
+                                    : "rgba(255,255,255,0.06)",
+                                border: uploadState === "error"
+                                    ? "1px solid rgba(248,113,113,0.3)"
+                                    : uploadState === "done"
+                                    ? "1px solid rgba(52,211,153,0.3)"
+                                    : "1px solid rgba(255,255,255,0.1)",
+                                color: uploadState === "error" ? "#f87171" : uploadState === "done" ? "#34d399" : "#999",
+                            }}
+                        >
+                            {uploadState === "uploading" && (
+                                <div
+                                    className="w-3 h-3 rounded-full border border-t-transparent animate-spin"
+                                    style={{ borderColor: "rgba(255,255,255,0.3)", borderTopColor: "transparent" }}
+                                />
+                            )}
+                            {uploadState === "done" && <span>✓</span>}
+                            {uploadState === "error" && <span>✕</span>}
+                            <span className="truncate max-w-[200px]">
+                                {uploadState === "uploading" && `Uploading ${uploadFilename}…`}
+                                {uploadState === "done" && `${uploadFilename} ready`}
+                                {uploadState === "error" && `Failed to upload ${uploadFilename}`}
+                            </span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <motion.div
                     ref={wrapperRef}
                     data-panel
                     className={cx(
-                        "bg-background relative bottom-8 z-[3] flex flex-col items-center overflow-hidden border max-sm:bottom-5"
+                        "bg-background relative bottom-2 z-[3] flex flex-col items-center overflow-hidden border max-sm:bottom-1"
                     )}
                     initial={false}
                     animate={{
@@ -208,7 +279,7 @@ export function MorphPanel({ onSend, disabled, placeholder }: MorphPanelProps) {
                     }}
                 >
                     <FormContext.Provider value={ctx}>
-                        <DockBar disabled={disabled} />
+                        <DockBar disabled={disabled} onAttachClick={() => fileInputRef.current?.click()} />
                         <InputForm
                             ref={textareaRef}
                             onSuccess={handleSuccess}
@@ -222,10 +293,11 @@ export function MorphPanel({ onSend, disabled, placeholder }: MorphPanelProps) {
     )
 }
 
+
 // ── DockBar ─────────────────────────────────────────────────────────
 
-function DockBar({ disabled }: { disabled?: boolean }) {
-    const { showForm, triggerOpen } = useFormContext()
+function DockBar({ disabled, onAttachClick }: { disabled?: boolean; onAttachClick?: () => void }) {
+    const { showForm, triggerOpen, uploadState } = useFormContext()
     return (
         <footer className="mt-auto flex h-[44px] items-center justify-center whitespace-nowrap select-none">
             <div className="flex items-center justify-center gap-2 px-3 max-sm:h-10 max-sm:px-2">
@@ -264,6 +336,35 @@ function DockBar({ disabled }: { disabled?: boolean }) {
                         {disabled ? "Swift is thinking…" : "Ask Swift"}
                     </span>
                 </Button>
+
+                {/* Paperclip attach button */}
+                <AnimatePresence>
+                    {!showForm && (
+                        <motion.button
+                            type="button"
+                            id="attach-file-btn"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.15 }}
+                            onClick={onAttachClick}
+                            disabled={disabled || uploadState === "uploading"}
+                            title="Upload CSV or Excel file"
+                            className="flex items-center justify-center w-7 h-7 rounded-full transition-all duration-200"
+                            style={{
+                                color: uploadState === "uploading" ? "#555" : "#666",
+                                background: "transparent",
+                                cursor: disabled || uploadState === "uploading" ? "not-allowed" : "pointer",
+                            }}
+                            onMouseEnter={(e) => { if (!disabled && uploadState !== "uploading") (e.currentTarget as HTMLElement).style.color = "#ccc" }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = uploadState === "uploading" ? "#555" : "#666" }}
+                        >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                            </svg>
+                        </motion.button>
+                    )}
+                </AnimatePresence>
             </div>
         </footer>
     )

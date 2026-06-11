@@ -22,6 +22,7 @@ export function HumanBubble({ item }: { item: HumanItem }) {
   );
 }
 
+
 // ── AI bubble ────────────────────────────────────────────────────
 export function AIBubble({ item }: { item: AIItem }) {
   return (
@@ -48,7 +49,9 @@ export function AIBubble({ item }: { item: AIItem }) {
       >
         {item.text ? (
           <div className={`prose-chat${item.streaming ? " cursor-blink" : ""}`}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{item.text}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {item.text}
+            </ReactMarkdown>
           </div>
         ) : (
           // Empty streaming — show animated dots

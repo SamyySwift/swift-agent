@@ -18,6 +18,9 @@ dependencies = [
     "sqlalchemy>=2.0.49",
     "nest_asyncio>=1.6.0",
     "langchain-ollama>=1.1.0",
+    "openpyxl>=3.1.0",
+    "python-multipart>=0.0.9",
+    "fastapi>=0.136.3",
 ]
 
 [dependency-groups]
