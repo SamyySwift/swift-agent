@@ -303,15 +303,15 @@ export async function* streamRun(
             const role = msg.type ?? msg.role ?? "";
             if (role === "tool" && (msg.name ?? "") === "generate_visualization") {
               const rid = msg.id ?? "";
-              if (rid && !seenToolResultIds.has(rid)) {
-                seenToolResultIds.add(rid);
+              if (!seenToolResultIds.has(rid) || rid === "") {
+                if (rid) seenToolResultIds.add(rid);
                 const raw =
                   typeof msg.content === "string"
                     ? msg.content
                     : JSON.stringify(msg.content);
                 results.push({
                   kind: "tool_result",
-                  id: rid,
+                  id: rid || crypto.randomUUID(),
                   name: "generate_visualization",
                   content: raw,
                   isError: msg.status === "error",
