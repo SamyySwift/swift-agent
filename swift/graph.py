@@ -46,9 +46,9 @@ async def build_graph():
         print(f"Something went wrong while trying to load tools... {e}")
 
     llm = ChatGroq(
-        model="llama3-70b-8192",
+        model="llama-3.3-70b-versatile",
         temperature=0,
-    ).bind_tools(all_tools)
+    ).bind_tools(all_tools, parallel_tool_calls=True)
 
     async def agent_node(state: AgentState) -> AgentState:
         messages_for_llm = []
