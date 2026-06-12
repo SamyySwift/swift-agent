@@ -440,7 +440,7 @@ function InputForm({ ref, onSuccess, disabled, placeholder }: InputFormProps) {
                             }}
                             placeholder={placeholder ?? "Ask me anything..."}
                             name="message"
-                            className="w-full resize-none scroll-py-2 rounded-md px-4 pt-4 pb-12 outline-0 bg-transparent text-foreground"
+                            className="w-full resize-none scroll-py-2 rounded-md px-4 pt-4 pb-12 outline-0 bg-transparent text-foreground text-[16px]"
                             style={{ minHeight: "120px" }}
                             disabled={disabled}
                             onKeyDown={handleKeys}

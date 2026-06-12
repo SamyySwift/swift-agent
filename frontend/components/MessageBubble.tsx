@@ -27,19 +27,6 @@ export function HumanBubble({ item }: { item: HumanItem }) {
 export function AIBubble({ item }: { item: AIItem }) {
   return (
     <div className="flex items-start gap-3 animate-in">
-      {/* Avatar */}
-      <div
-        className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-black"
-        style={{
-          background: "linear-gradient(135deg, var(--accent-from), var(--accent-to))",
-          boxShadow: "0 0 14px var(--accent-glow)",
-        }}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" />
-        </svg>
-      </div>
-
       {/* Bubble */}
       <div
         className="min-w-0 max-w-[85%] px-4 py-3 rounded-2xl rounded-tl-sm text-sm"
@@ -51,7 +38,16 @@ export function AIBubble({ item }: { item: AIItem }) {
       >
         {item.text ? (
           <div className={`prose-chat${item.streaming ? " cursor-blink" : ""}`}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={{
+                table: ({node, ...props}) => (
+                  <div className="overflow-x-auto w-full mb-4">
+                    <table className="min-w-full" {...props} />
+                  </div>
+                )
+              }}
+            >
               {item.text}
             </ReactMarkdown>
           </div>
