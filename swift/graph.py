@@ -47,14 +47,14 @@ async def build_graph():
     # Instantiate llm with fallback capbility
     fallback_llm = ChatOpenAI(
         base_url="https://openrouter.ai/api/v1",
-        model="nex-agi/nex-n2-pro:free",
+        model="nvidia/nemotron-3-super-120b-a12b:free",
         temperature=0.2,
         streaming=True
     ).bind_tools(all_tools, parallel_tool_calls=True)
 
     llm = ChatOpenAI(
         base_url="https://openrouter.ai/api/v1",
-        model="nvidia/nemotron-3-super-120b-a12b:free",
+        model="nex-agi/nex-n2-pro:free",
         streaming=True,
         temperature=0.2,
     ).bind_tools(all_tools, parallel_tool_calls=True).with_fallbacks([fallback_llm])
