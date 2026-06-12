@@ -54,7 +54,7 @@ async def build_graph():
 
     llm = ChatOpenAI(
         base_url="https://openrouter.ai/api/v1",
-        model="qwen/qwen3-next-80b-a3b-instruct:free",
+        model="google/gemma-4-31b-it:free",
         streaming=True,
         temperature=0.2,
     ).bind_tools(all_tools, parallel_tool_calls=True).with_fallbacks([fallback_llm])
