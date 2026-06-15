@@ -65,9 +65,14 @@ async def build_graph():
         messages_for_llm = []
         for msg in state["messages"]:
             if getattr(msg, "name", "") == "generate_visualization" and isinstance(msg, ToolMessage):
+                if msg.content.startswith("Error"):
+                    content = f"Plot generation failed. Please fix your code and try again. The exact error was:\n\n{msg.content}"
+                else:
+                    content = "Plot generated and rendered on the frontend successfully. You do not need to output the plot data."
+                
                 messages_for_llm.append(
                     ToolMessage(
-                        content="Plot generated and rendered on the frontend successfully. You do not need to output the plot data.",
+                        content=content,
                         name=msg.name,
                         tool_call_id=msg.tool_call_id
                     )
