@@ -5,6 +5,9 @@ const BASE_URL =
 const GRAPH_ID = process.env.LANGGRAPH_GRAPH_ID || "swift";
 
 export const runtime = "nodejs";
+// Prevent Vercel from killing long-running SSE streams (default is 10s on Hobby, 60s on Pro).
+// Large tool outputs like Plotly JSON can take several seconds to arrive.
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -91,8 +94,12 @@ export async function POST(req: NextRequest) {
   return new Response(readable, {
     headers: {
       "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+      // Disable buffering in Vercel's edge proxy and nginx so large SSE chunks
+      // (e.g. Plotly JSON from generate_visualization) aren't held until the
+      // connection closes. Without this, charts never arrive on deployed frontends.
+      "X-Accel-Buffering": "no",
       "X-Thread-Id": tid,
     },
   });
