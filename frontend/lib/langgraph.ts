@@ -242,26 +242,24 @@ export async function* streamRun(
               accumulatedText = "";
             }
 
-            // Skip generate_visualization tool results from partial events —
-            // the full JSON will be reliably emitted from the `values` event.
-            // For other tools, emit immediately as usual.
+            // Emit all tool results (including generate_visualization) from partial events.
+            // The values event will also fire with the same messages; seenToolResultIds
+            // prevents duplicates across both events.
             const toolName = msg.name ?? "tool";
-            if (toolName !== "generate_visualization") {
-              const rid = msg.id ?? "";
-              if (!rid || !seenToolResultIds.has(rid)) {
-                if (rid) seenToolResultIds.add(rid);
-                const raw =
-                  typeof msg.content === "string"
-                    ? msg.content
-                    : JSON.stringify(msg.content);
-                results.push({
-                  kind: "tool_result",
-                  id: rid || crypto.randomUUID(),
-                  name: toolName,
-                  content: raw,
-                  isError: msg.status === "error",
-                });
-              }
+            const rid = msg.id ?? "";
+            if (!rid || !seenToolResultIds.has(rid)) {
+              if (rid) seenToolResultIds.add(rid);
+              const raw =
+                typeof msg.content === "string"
+                  ? msg.content
+                  : JSON.stringify(msg.content);
+              results.push({
+                kind: "tool_result",
+                id: rid || crypto.randomUUID(),
+                name: toolName,
+                content: raw,
+                isError: msg.status === "error",
+              });
             }
           }
         }
@@ -298,32 +296,22 @@ export async function* streamRun(
 
         const messages = state["messages"] as RawMessage[] | undefined;
         if (Array.isArray(messages)) {
-          console.log(`[DEBUG] Received values event with ${messages.length} messages.`);
-          const visMsgs = messages.filter(m => (m.type === "tool" || m.role === "tool") && m.name === "generate_visualization");
-          console.log(`[DEBUG] Found ${visMsgs.length} generate_visualization tool messages in values event.`);
-          if (visMsgs.length > 0) {
-            console.log(`[DEBUG] First vis msg details: id=${visMsgs[0].id}, name=${visMsgs[0].name}, content length=${typeof visMsgs[0].content === 'string' ? visMsgs[0].content.length : JSON.stringify(visMsgs[0].content).length}`);
-          }
-          
           for (const msg of messages) {
             const role = msg.type ?? msg.role ?? "";
             const isTool = role === "tool" || role === "ToolMessage" || role.toLowerCase().includes("tool");
             if (isTool) {
               const toolName = msg.name ?? "tool";
               const rid = msg.id ?? "";
-              // For generate_visualization, we explicitly allow processing even if rid is empty
-              const isVis = toolName === "generate_visualization";
-              const allowEmptyRid = isVis && rid === "";
-              
-              if ((rid && !seenToolResultIds.has(rid)) || allowEmptyRid) {
-                if (rid) seenToolResultIds.add(rid);
+
+              if (rid && !seenToolResultIds.has(rid)) {
+                seenToolResultIds.add(rid);
                 const raw =
                   typeof msg.content === "string"
                     ? msg.content
                     : JSON.stringify(msg.content);
                 results.push({
                   kind: "tool_result",
-                  id: rid || crypto.randomUUID(),
+                  id: rid,
                   name: toolName,
                   content: raw,
                   isError: msg.status === "error",
